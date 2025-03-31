@@ -1,4 +1,4 @@
-/*
+*
  *   Copyright (C) 2017...2021 by Lieven De Samblanx ON7LDS
  *
  *   This program is free software; you can redistribute it and/or modify
@@ -85,7 +85,7 @@ int netIsActive[10];
 int transparentIsEnabled,sendFrameType;
 char remotePort[10],localPort[10];
 
-char TXbuffer[1024],RXbuffer[1048];
+char TXbuffer[1024],RXbuffer[1024];
 
 char* RGBtoNextionColor(int RGB);
 void sendCommand(char *cmd);
@@ -367,6 +367,17 @@ void updateDisplay(void) {
 
 }
 
+The errors you’re seeing indicate that several variables (response, ok, info, cmd, resNmbr, ls, and code) used in the original command processing section of handleButton were not declared in the updated version because I removed them from the top-level scope to avoid conflicts with the *#X block. However, these variables are still needed for the rest of the function. Let’s fix this by properly declaring all necessary variables at the top of the function.
+
+Here’s the corrected version of handleButton with all variables declared:
+
+c
+
+Collapse
+
+Wrap
+
+Copy
 void handleButton(int received) {
     char text[150], info[100], *cmd;  // Added info and cmd
     int i, response = 0, resNmbr, ok; // Added response, resNmbr, and ok
@@ -380,7 +391,7 @@ void handleButton(int received) {
             sprintf(&text[strlen(text)], "%02X ", RXbuffer[i]);
         }
         sprintf(&text[strlen(text)], ")");
-     //   writelog(2, text);
+        writelog(2, text);
 
         if (RXbuffer[0] == 42) { // '*'
             if (received > 3 && RXbuffer[1] == '#' && RXbuffer[2] == 'X') {
@@ -393,20 +404,20 @@ void handleButton(int received) {
                 for (i = 3; i < received - 2; i++) {
                     if (RXbuffer[i] == 0xFF && RXbuffer[i + 1] == 0xFF && RXbuffer[i + 2] == 0xFF) {
                         cmd_len = i - 3;
-//                        writelog(2, "Terminator found at index %d, cmd_len = %d", i, cmd_len);
+                        writelog(2, "Terminator found at index %d, cmd_len = %d", i, cmd_len);
                         break;
                     }
                 }
                 if (cmd_len == 0) {
                     // If no terminator found, assume command runs to end of buffer
                     cmd_len = received - 3;
-   //                 writelog(2, "No terminator found, assuming cmd_len = %d", cmd_len);
+                    writelog(2, "No terminator found, assuming cmd_len = %d", cmd_len);
                 }
 
                 if (cmd_len > 0 && cmd_len < sizeof(command)) {
                     strncpy(command, &RXbuffer[3], cmd_len);
                     command[cmd_len] = '\0';
-    //                writelog(2, "Received password: \"%s\"", command);
+                    writelog(2, "Received password: \"%s\"", command);
 
                     if (cmd_len == 0 || strcmp(command, "") == 0) {
                         strcpy(command, "raspberry");
@@ -414,18 +425,15 @@ void handleButton(int received) {
                     }
 
                     base64_encode((unsigned char *)command, strlen(command), encoded);
-    //                writelog(2, "Encoded password: \"%s\"", encoded);
-                    writelog(2, "Encoded password");
+                    writelog(2, "Encoded password: \"%s\"", encoded);
 
                     FILE *fp = fopen("/etc/pspass", "w");
                     if (fp != NULL) {
                         fprintf(fp, "%s\n", encoded);
                         fclose(fp);
-                        writelog(2, "Password successfully written to file");
-    //                    writelog(2, "Password successfully written to /etc/pspass");
+                        writelog(2, "Password successfully written to /etc/pspass");
                     } else {
-                        writelog(2, "Failed to open pasword file for writing");
-    //                    writelog(2, "Failed to open /etc/pspass for writing");
+                        writelog(2, "Failed to open /etc/pspass for writing");
                         system("sudo mount -o remount,rw /");
                         fp = fopen("/etc/pspass", "w");
                         if (fp != NULL) {
@@ -433,7 +441,7 @@ void handleButton(int received) {
                             fclose(fp);
                             writelog(2, "Password written after remounting filesystem");
                         } else {
-                            writelog(2, "Still failed to write to passwird file");
+                            writelog(2, "Still failed to write to /etc/pspass");
                         }
                     }
 
