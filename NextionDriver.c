@@ -390,7 +390,8 @@ void handleButton(int received) {
                 writelog(2, "Special Command Received");
 
                 // Find command length (look for FF FF FF or end of buffer)
-                for (i = 3; i < received - 2; i++) {
+//                for (i = 3; i < received - 2; i++) {
+                for (i = 4; i < received - 2; i++) {
                     if (RXbuffer[i] == 0xFF && RXbuffer[i + 1] == 0xFF && RXbuffer[i + 2] == 0xFF) {
                         cmd_len = i - 3;
 //                        writelog(2, "Terminator found at index %d, cmd_len = %d", i, cmd_len);
